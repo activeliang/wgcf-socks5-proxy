@@ -16,7 +16,7 @@ docker run --rm -it \
      -v /lib/modules:/lib/modules \
      -v $(pwd)/wgcf:/wgcf \
      -p 7889:1080 \
-     activeliang/wgcf-socks5-proxy-6
+     activeliang/wgcf-socks5-proxy -6
 ```
 
 Now you can use the socks proxy on the host machine:
