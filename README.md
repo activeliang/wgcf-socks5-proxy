@@ -1,6 +1,32 @@
 # wgcf-docker
 CloudFlare warp in docker
 
+fork from: https://github.com/Neilpang/wgcf-docker
+
+#### What improvements did I make:
+1. Limit the alpine version to 3.17 to avoid errors caused by version issues.
+2. Added socks5 proxy service
+
+Run example:
+``` shell
+docker run --rm -it \
+     --name wgcf \
+     --sysctl net.ipv6.conf.all.disable_ipv6=0 \
+     --privileged --cap-add net_admin \
+     -v /lib/modules:/lib/modules \
+     -v $(pwd)/wgcf:/wgcf \
+     -p 7889:1080 \
+     activeliang/wgcf-socks5-proxy-6
+```
+
+Now you can use the socks proxy on the host machine:
+
+```shell
+curl --socks5 127.0.0.1:7889 -6 ip.p3terx.com
+```
+
+The following is the readme of the original project
+
 
 1. Run a single container:
 

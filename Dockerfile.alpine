@@ -1,24 +1,34 @@
-FROM alpine:3
+# 阶段 1：构建 microsocks
+FROM alpine:3.17 AS builder
 
+RUN apk update -f \  
+  && apk --no-cache add -f \  
+  git gcc musl-dev make
 
-RUN apk update -f \
-  && apk --no-cache add -f \
-  curl ca-certificates \
-  iproute2 net-tools iptables \
-  wireguard-tools openresolv \
-  && rm -rf /var/cache/apk/*
-  
-  
-RUN curl -fsSL git.io/wgcf.sh | bash && mkdir -p /wgcf
+RUN git clone https://github.com/rofl0r/microsocks.git \
+  && cd microsocks \
+  && make \
+  && make install
 
-WORKDIR /wgcf
+# 阶段 2：创建最终镜像
+FROM alpine:3.17
 
-VOLUME /wgcf
+COPY --from=builder /usr/local/bin/microsocks /usr/local/bin/microsocks
 
+RUN apk update -f \  
+  && apk --no-cache add -f \  
+  curl ca-certificates \  
+  iproute2 net-tools iptables \  
+  wireguard-tools openresolv \  
+  && rm -rf /var/cache/apk/*  
 
-COPY entry.sh /entry.sh
-RUN chmod +x /entry.sh
+RUN curl -fsSL git.io/wgcf.sh | bash && mkdir -p /wgcf  
+
+WORKDIR /wgcf  
+
+VOLUME /wgcf  
+
+COPY entry.sh /entry.sh  
+RUN chmod +x /entry.sh  
 
 ENTRYPOINT ["/entry.sh"]
-
-

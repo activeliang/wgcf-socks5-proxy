@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-
+#!/bin/sh
 set -e
 
 
@@ -63,7 +62,7 @@ runwgcf() {
 
   echo 
   echo "OK, wgcf is up."
-  
+  _startSocks5Proxy
 
   sleep infinity & wait
   
@@ -78,8 +77,6 @@ _checkV4() {
     sleep 2
     wg-quick up wgcf
   done
-
-
 }
 
 _checkV6() {
@@ -90,11 +87,14 @@ _checkV6() {
     sleep 2
     wg-quick up wgcf
   done
-
-
 }
 
-
+_startSocks5Proxy() {
+  echo "starting socks5 proxy server..."
+  # sockd -f /etc/sockd.conf -N 1 &
+  microsocks &
+  echo "socks5 proxy server is running..."
+}
 
 if [ -z "$@" ] || [[ "$1" = -* ]]; then
   runwgcf "$@"
