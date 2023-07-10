@@ -92,7 +92,26 @@ _checkV6() {
 _startSocks5Proxy() {
   echo "starting socks5 proxy server..."
   # sockd -f /etc/sockd.conf -N 1 &
-  microsocks &
+  if [ -n "$USER" ] && [ -n "$PASSWORD" ]; then
+    AUTH_FLAG="-u $USER -P $PASSWORD"
+  else
+    AUTH_FLAG=""
+  fi
+
+  # 检查是否设置了端口号变量，否则使用默认值 1080
+  if [ -n "$PORT" ]; then
+    PORT_FLAG="-p $PORT"
+  else
+    PORT_FLAG="-p 1080"
+  fi
+
+  # 检查是否设置了主机变量，否则使用默认值 0.0.0.0
+  if [ -n "$HOST" ]; then
+    HOST_FLAG="-i $HOST"
+  else
+    HOST_FLAG="-i 0.0.0.0"
+  fi
+  microsocks $HOST_FLAG $PORT_FLAG $AUTH_FLAG &
   echo "socks5 proxy server is running..."
 }
 
