@@ -9,7 +9,6 @@ docker build -f Dockerfile.alpine --no-cache --progress=plain -t activeliang/wgc
 # 打包同时支持amd64和arm64
 docker buildx build --platform linux/amd64,linux/arm64 -t activeliang/wgcf-socks5-proxy -f Dockerfile.alpine --push .
 
-
 docker run --rm -it \
     --name wgcf \
     --sysctl net.ipv6.conf.all.disable_ipv6=0 \
@@ -18,6 +17,17 @@ docker run --rm -it \
     -v $(pwd)/wgcf:/wgcf \
     -p 7889:1080 \
     activeliang/wgcf-socks5-proxy -6
+
+docker run --rm -it \
+    --name wgcf \
+    -e PUSHOVER_USER \
+    -e PUSHOVER_TOKEN \
+    --sysctl net.ipv6.conf.all.disable_ipv6=0 \
+    --privileged --cap-add net_admin \
+    -v /lib/modules:/lib/modules \
+    -v $(pwd)/wgcf:/wgcf \
+    -p 7889:1080 \
+    activeliang/wgcf-socks5-proxy -6 -gpt_check
 
 docker run --rm -it \
     --name wgcf \
