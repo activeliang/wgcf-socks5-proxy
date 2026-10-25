@@ -63,7 +63,10 @@ _checkServerStatus() {
 }
 
 _setAllowedIPs() {
-  if [ "$1" = "-6" ]; then
+  # PREFER_V6=1 : IPv6 优先，且 IPv4 兜底也走 WARP（双栈全进隧道）
+  if [ "$PREFER_V6" = "1" ]; then
+    _allowedIPs="0.0.0.0/0, ::/0"
+  elif [ "$1" = "-6" ]; then
     _allowedIPs="::/0"
   elif [ "$1" = "-4" ]; then
     _allowedIPs="0.0.0.0/0"
@@ -79,7 +82,7 @@ runwgcf() {
   trap '_downwgcf' ERR TERM INT
 
   _enableV4="1"
-  if [ "$1" = "-6" ]; then
+  if [ "$1" = "-6" ] || [ "$PREFER_V6" = "1" ]; then
     _enableV4=""
   fi
 

@@ -18,6 +18,17 @@ docker run --rm -it \
     -p 7889:1080 \
     activeliang/wgcf-socks5-proxy -6
 
+# IPv6 优先，IPv4 兜底也走 WARP（双栈都进隧道）
+docker run --rm -it \
+    --name wgcf \
+    -e PREFER_V6=1 \
+    --sysctl net.ipv6.conf.all.disable_ipv6=0 \
+    --privileged --cap-add net_admin \
+    -v /lib/modules:/lib/modules \
+    -v $(pwd)/wgcf:/wgcf \
+    -p 7889:1080 \
+    activeliang/wgcf-socks5-proxy -6
+
 docker run --rm -it \
     --name wgcf \
     -e PUSHOVER_USER \
