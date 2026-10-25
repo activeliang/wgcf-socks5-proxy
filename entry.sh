@@ -77,6 +77,25 @@ _setAllowedIPs() {
   sed -i "s|^AllowedIPs[[:space:]]*=.*|AllowedIPs = $_allowedIPs|" /etc/wireguard/wgcf.conf
 }
 
+# BLOCK_V4=1: 拒绝所有 IPv4 出站（仅放行 DNS 和 WARP 隧道自身流量），
+# 使 socks5 转发的 IPv4 请求直接失败，实现"只走 IPv6"。
+# 只用 iptables（IPv4），不影响 IPv6。
+_blockV4() {
+  _wg_port=$(sed -n "s/^Endpoint[[:space:]]*=.*:\([0-9]*\)$/\1/p" /etc/wireguard/wgcf.conf | head -1)
+  [ -n "$_wg_port" ] || _wg_port=2408
+  modprobe nf_conntrack 2>/dev/null || true
+  # 放行已建立连接的回包（否则 socks5 对客户端的响应会被下面的 REJECT 拒掉）
+  iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+  iptables -A OUTPUT -o lo -j ACCEPT
+  iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+  iptables -A OUTPUT -p tcp --dport 53 -j ACCEPT
+  iptables -A OUTPUT -p udp --dport "$_wg_port" -j ACCEPT
+  iptables -A OUTPUT -p udp -j REJECT
+  iptables -A OUTPUT -p tcp -j REJECT
+  iptables -A OUTPUT -j REJECT
+  echo "BLOCK_V4 enabled: IPv4 outbound is rejected (only DNS and WARP tunnel are allowed)."
+}
+
 #-4|-6
 runwgcf() {
   trap '_downwgcf' ERR TERM INT
@@ -108,9 +127,13 @@ runwgcf() {
 
   _setAllowedIPs "$1"
 
-  modprobe ip6table_raw
+  modprobe ip6table_raw 2>/dev/null || true
   
   wg-quick up wgcf
+
+  if [ "$BLOCK_V4" = "1" ]; then
+    _blockV4
+  fi
   
   if [ "$_enableV4" ]; then
     _checkV4

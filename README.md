@@ -71,6 +71,26 @@ To configure the SOCKS5 proxy, follow these steps:
 
 That's it! You can now configure the SOCKS5 proxy using environment variables, with the option to enable authentication by providing both the USER and PASSWORD variables.
 
+### BLOCK_V4 switch (IPv6-only mode)
+
+By default, in `-6` mode IPv4 traffic bypasses the WARP tunnel and succeeds via the real server IP.
+
+Set `BLOCK_V4=1` to make the container **IPv6-only**: all IPv4 outbound traffic is rejected (except DNS queries and the WARP tunnel's own UDP traffic). As a result, SOCKS5 requests to IPv4-only domains **fail immediately** instead of falling back to IPv4.
+
+Example:
+
+```bash
+docker run --rm -it \
+    --name wgcf \
+    --sysctl net.ipv6.conf.all.disable_ipv6=0 \
+    --privileged --cap-add net_admin \
+    -v /lib/modules:/lib/modules \
+    -v $(pwd)/wgcf:/wgcf \
+    -p 7889:1080 \
+    -e BLOCK_V4=1 \
+    activeliang/wgcf-socks5-proxy -6
+```
+
 ### PREFER_V6 switch (IPv6-first routing)
 
 By default, in `-6` mode only IPv6 traffic goes through the WARP tunnel; IPv4 traffic bypasses it and egresses from your real server IP.
